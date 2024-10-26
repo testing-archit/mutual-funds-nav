@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMFI NAV Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #5c6bc0;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        #search-container {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 30px;
+        }
+
+        #search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* Direct Search Container */
+        #direct-search-container {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background-color: #5c6bc0;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #3f51b5;
+        }
+
+        #results {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .fund {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .fund:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .fund h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .fund-house {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .details {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .detail {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .error {
+            color: #d32f2f;
+            padding: 15px;
+            background-color: #ffebee;
+            border-radius: 4px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .info {
+            color: #666;
+            text-align: center;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .serial-number {
+            color: #5c6bc0;
+            font-weight: bold;
+            margin-right: 10px;
+            background-color: #e8eaf6;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .copy-button {
+            padding: 4px 8px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .copy-button:hover {
+            background-color: #45a049;
+        }
+
+        .tab-container {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background-color: #5c6bc0;
+            color: white;
+            border-color: #5c6bc0;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #5c6bc0;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>AMFI Mutual Fund NAV Search</h1>
+
+    <div class="tab-container">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('search')">Search Funds</div>
+            <div class="tab" onclick="switchTab('direct')">Direct NAV Lookup</div>
+        </div>
+    </div>
+
+    <div id="search-tab" class="tab-content active">
+        <div id="search-container">
+            <div id="search-form">
+                <input 
+                    type="text" 
+                    id="fund-name" 
+                    placeholder="Search by fund house or scheme name (e.g., SBI, HDFC, Banking)" 
+                    onkeypress="if(event.key === 'Enter') searchFund()"
+                />
+                <button onclick="searchFund()">Search</button>
+            </div>
+            <div class="info">Data sourced directly from AMFI India</div>
+        </div>
+    </div>
+
+    <div id="direct-tab" class="tab-content">
+        <div id="direct-search-container">
+            <input 
+                type="number" 
+                id="serial-number" 
+                placeholder="Enter fund serial number" 
+                onkeypress="if(event.key === 'Enter') lookupFundBySerial()"
+            />
+            <button onclick="lookupFundBySerial()">Look Up</button>
+        </div>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        // Switch between tabs
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`.tab:nth-child(${tabName === 'search' ? '1' : '2'})`).classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+
+            // Clear results
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // Search funds by name
+        async function searchFund() {
+            const fundName = document.getElementById('fund-name').value;
+            const resultsDiv = document.getElementById('results');
+            
+            if (!fundName) {
+                resultsDiv.innerHTML = '<p class="error">Please enter a fund name or scheme to search</p>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loading">Searching mutual funds...<div class="loader"></div></div>';
+
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/search?name=${encodeURIComponent(fundName)}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (data.length === 0) {
+                        resultsDiv.innerHTML = '<p class="error">No matching funds found. Try a different search term.</p>';
+                    } else {
+                        resultsDiv.innerHTML = `
+                            <div class="info">Found ${data.length} matching funds</div>
+                            ${data.map(fund => createFundCard(fund)).join('')}
+                        `;
+                    }
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">Error: ${data.error || 'Failed to fetch results'}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = '<p class="error">Error connecting to the server. Please ensure the server is running and try again.</p>';
+                console.error('Error:', error);
+            }
+        }
+
+        // Look up fund by serial number
+        async function lookupFundBySerial() {
+            const serialNumber = document.getElementById('serial-number').value;
+            const resultsDiv = document.getElementById('results');
+
+            if (!serialNumber) {
+                resultsDiv.innerHTML = '<p class="error">Please enter a serial number</p>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loading">Looking up fund...<div class="loader"></div></div>';
+
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/nav/${serialNumber}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultsDiv.innerHTML = createFundCard({
+                        ...data,
+                        serial_number: serialNumber
+                    });
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">Error: ${data.error || 'Fund not found'}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = '<p class="error">Error connecting to the server. Please ensure the server is running and try again.</p>';
+                console.error('Error:', error);
+            }
+        }
+
+        // Create fund card HTML
+        function createFundCard(fund) {
+            return `
+                <div class="fund">
+                    <div class="fund-house">
+                        <span class="serial-number">#${fund.serial_number}</span>
+                        ${fund.fund_house}
+                        <button class="copy-button" onclick="copySerialNumber(${fund.serial_number})">
+                            Copy ID
+                        </button>
+                    </div>
+                    <h3>${fund.scheme_name}</h3>
+                    <div class="details">
+                        <div class="detail">
+                            <strong>NAV:</strong> ₹${fund.nav.toFixed(4)}
+                        </div>
+                        <div class="detail">
+                            <strong>Date:</strong> ${fund.date}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Copy serial number to clipboard
+        async function copySerialNumber(serialNumber) {
+            try {
+                await navigator.clipboard.writeText(serialNumber);
+                alert(`Serial number ${serialNumber} copied to clipboard!`);
+            } catch (err) {
+                console.error('Failed to copy serial number:', err);
+                alert('Failed to copy serial number to clipboard');
+            }
+        }
+    </script>
+</body>
+</html>
