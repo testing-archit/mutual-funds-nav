@@ -225,6 +225,10 @@
             color: #666;
             margin-top: 5px;
         }
+        
+        .footer{
+            color:#333
+        }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -285,6 +289,10 @@
     </div>
 
     <div id="results"></div>
+
+    <div>
+        <h1> Created and maintained by Archit Gupta</h1>
+    </div>
 
     <script>
         // Global variables for pagination
@@ -456,7 +464,10 @@
                         <strong>Scheme Type:</strong> ${fund.scheme_type || 'N.A.'}
                     </div>
                 </div>
+
+            
             `;
+                
         }
 
         // Pagination handlers
