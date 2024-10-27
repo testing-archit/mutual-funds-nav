@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
 from typing import Dict, List
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -23,8 +24,8 @@ def fetch_amfi_data():
 
 def parse_mutual_fund_data(raw_data):
     global current_serial, processed_funds
-    processed_funds.clear()  # Reset the processed funds
-    current_serial = 1  # Reset serial number
+    processed_funds.clear()
+    current_serial = 1
 
     if not raw_data:
         return []
@@ -60,12 +61,14 @@ def parse_mutual_fund_data(raw_data):
                         "nav": float(parts[4]) if parts[4] else None,
                         "date": parts[5]
                     }
-                    # Store in processed_funds with serial number as key
                     processed_funds[current_serial] = {
                         "fund_house": current_fund_house,
                         "scheme_name": parts[3],
                         "nav": float(parts[4]) if parts[4] else None,
-                        "date": parts[5]
+                        "date": parts[5],
+                        "scheme_code": parts[0],
+                        "isin_payout": parts[1],
+                        "isin_reinvest": parts[2] if parts[2] != '-' else None
                     }
                     current_serial += 1
                     current_schemes.append(scheme_info)
@@ -81,40 +84,114 @@ def parse_mutual_fund_data(raw_data):
 
     return funds
 
-@app.route('/nav', methods=['GET'])
-def get_nav():
+@app.route('/api/v1/nav', methods=['GET'])
+def get_all_nav():
+    """
+    Get all NAV data
+    Optional query parameters:
+    - fund_house: Filter by fund house name
+    - limit: Limit number of results (default: 100)
+    - offset: Offset for pagination (default: 0)
+    """
+    fund_house = request.args.get('fund_house', '').lower()
+    limit = int(request.args.get('limit', 100))
+    offset = int(request.args.get('offset', 0))
+    
     raw_data = fetch_amfi_data()
     if not raw_data:
-        return jsonify({"error": "Failed to fetch data from AMFI"}), 500
+        return jsonify({
+            "status": "error",
+            "message": "Failed to fetch data from AMFI",
+            "timestamp": datetime.now().isoformat()
+        }), 500
     
     funds_data = parse_mutual_fund_data(raw_data)
-    return jsonify(funds_data)
+    
+    # Filter and format response
+    results = []
+    for fund in funds_data:
+        if not fund_house or fund_house in fund['fund_house'].lower():
+            for scheme in fund['schemes']:
+                results.append({
+                    "serial_number": scheme['serial_number'],
+                    "fund_house": fund['fund_house'],
+                    "scheme_name": scheme['scheme_name'],
+                    "scheme_code": scheme['scheme_code'],
+                    "nav": scheme['nav'],
+                    "date": scheme['date'],
+                    "isin_payout": scheme['isin_payout'],
+                    "isin_reinvest": scheme['isin_reinvest']
+                })
 
-@app.route('/nav/<int:serial_number>', methods=['GET'])
+    # Apply pagination
+    paginated_results = results[offset:offset + limit]
+    
+    return jsonify({
+        "status": "success",
+        "timestamp": datetime.now().isoformat(),
+        "data": {
+            "total_count": len(results),
+            "limit": limit,
+            "offset": offset,
+            "funds": paginated_results
+        }
+    })
+
+@app.route('/api/v1/nav/<int:serial_number>', methods=['GET'])
 def get_nav_by_serial(serial_number):
-    """Fetch NAV data for a specific serial number"""
+    """Get NAV data for a specific serial number"""
     if not processed_funds:
-        # If processed_funds is empty, fetch and process the data
         raw_data = fetch_amfi_data()
         if not raw_data:
-            return jsonify({"error": "Failed to fetch data from AMFI"}), 500
+            return jsonify({
+                "status": "error",
+                "message": "Failed to fetch data from AMFI",
+                "timestamp": datetime.now().isoformat()
+            }), 500
         parse_mutual_fund_data(raw_data)
     
     fund_data = processed_funds.get(serial_number)
     if fund_data:
-        return jsonify(fund_data)
-    return jsonify({"error": "Fund not found"}), 404
+        return jsonify({
+            "status": "success",
+            "timestamp": datetime.now().isoformat(),
+            "data": fund_data
+        })
+    return jsonify({
+        "status": "error",
+        "message": "Fund not found",
+        "timestamp": datetime.now().isoformat()
+    }), 404
 
-@app.route('/search', methods=['GET'])
+@app.route('/api/v1/search', methods=['GET'])
 def search_funds():
-    search_term = request.args.get('name', '').lower()
+    """
+    Search funds by name or fund house
+    Required query parameter:
+    - q: Search query
+    Optional parameters:
+    - limit: Limit number of results (default: 100)
+    - offset: Offset for pagination (default: 0)
+    """
+    search_term = request.args.get('q', '').lower()
+    limit = int(request.args.get('limit', 100))
+    offset = int(request.args.get('offset', 0))
+    
     if not search_term:
-        return jsonify({"error": "Search term is required"}), 400
+        return jsonify({
+            "status": "error",
+            "message": "Search query is required (use 'q' parameter)",
+            "timestamp": datetime.now().isoformat()
+        }), 400
 
     try:
         raw_data = fetch_amfi_data()
         if not raw_data:
-            return jsonify({"error": "Failed to fetch data from AMFI"}), 500
+            return jsonify({
+                "status": "error",
+                "message": "Failed to fetch data from AMFI",
+                "timestamp": datetime.now().isoformat()
+            }), 500
             
         all_funds = parse_mutual_fund_data(raw_data)
 
@@ -126,14 +203,33 @@ def search_funds():
                         "serial_number": scheme['serial_number'],
                         "fund_house": fund['fund_house'],
                         "scheme_name": scheme['scheme_name'],
+                        "scheme_code": scheme['scheme_code'],
                         "nav": scheme['nav'],
-                        "date": scheme['date']
+                        "date": scheme['date'],
+                        "isin_payout": scheme['isin_payout'],
+                        "isin_reinvest": scheme['isin_reinvest']
                     })
 
-        return jsonify(results)
+        # Apply pagination
+        paginated_results = results[offset:offset + limit]
+        
+        return jsonify({
+            "status": "success",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "total_count": len(results),
+                "limit": limit,
+                "offset": offset,
+                "funds": paginated_results
+            }
+        })
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.now().isoformat()
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
