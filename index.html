@@ -34,7 +34,6 @@
             margin-bottom: 10px;
         }
 
-        /* Direct Search Container */
         #direct-search-container {
             margin-top: 20px;
             width: 100%;
@@ -64,6 +63,11 @@
 
         button:hover {
             background-color: #3f51b5;
+        }
+
+        button:disabled {
+            background-color: #9fa8da;
+            cursor: not-allowed;
         }
 
         #results {
@@ -129,7 +133,7 @@
             color: #666;
             text-align: center;
             font-size: 0.9em;
-            margin-top: 10px;
+            margin: 10px 0;
         }
 
         .serial-number {
@@ -203,6 +207,25 @@
             margin-left: 10px;
         }
 
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .page-info {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .additional-info {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -216,6 +239,7 @@
         <div class="tabs">
             <div class="tab active" onclick="switchTab('search')">Search Funds</div>
             <div class="tab" onclick="switchTab('direct')">Direct NAV Lookup</div>
+            <div class="tab" onclick="switchTab('browse')">Browse All</div>
         </div>
     </div>
 
@@ -246,16 +270,44 @@
         </div>
     </div>
 
+    <div id="browse-tab" class="tab-content">
+        <div id="browse-container">
+            <div id="search-form">
+                <input 
+                    type="text" 
+                    id="fund-house-filter" 
+                    placeholder="Filter by fund house (optional)" 
+                    onkeypress="if(event.key === 'Enter') browseAllFunds()"
+                />
+                <button onclick="browseAllFunds()">Browse</button>
+            </div>
+        </div>
+    </div>
+
     <div id="results"></div>
 
     <script>
+        // Global variables for pagination
+        let currentOffset = 0;
+        const ITEMS_PER_PAGE = 10;
+        let totalItems = 0;
+        let currentTab = 'search';
+        let lastSearchTerm = '';
+        let lastFundHouse = '';
+
         // Switch between tabs
         function switchTab(tabName) {
+            currentTab = tabName;
+            currentOffset = 0;
+            
             // Update tab buttons
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
-            document.querySelector(`.tab:nth-child(${tabName === 'search' ? '1' : '2'})`).classList.add('active');
+            const activeTab = Array.from(document.querySelectorAll('.tab')).find(tab => 
+                tab.textContent.toLowerCase().includes(tabName)
+            );
+            if (activeTab) activeTab.classList.add('active');
 
             // Update tab content
             document.querySelectorAll('.tab-content').forEach(content => {
@@ -265,12 +317,18 @@
 
             // Clear results
             document.getElementById('results').innerHTML = '';
+
+            // If browse tab is selected, automatically load first page
+            if (tabName === 'browse') {
+                browseAllFunds();
+            }
         }
 
         // Search funds by name
-        async function searchFund() {
+        async function searchFund(offset = 0) {
             const fundName = document.getElementById('fund-name').value;
             const resultsDiv = document.getElementById('results');
+            lastSearchTerm = fundName;
             
             if (!fundName) {
                 resultsDiv.innerHTML = '<p class="error">Please enter a fund name or scheme to search</p>';
@@ -280,20 +338,14 @@
             resultsDiv.innerHTML = '<div class="loading">Searching mutual funds...<div class="loader"></div></div>';
 
             try {
-                const response = await fetch(`http://127.0.0.1:5000/search?name=${encodeURIComponent(fundName)}`);
+                const response = await fetch(`http://127.0.0.1:5000/api/v1/search?q=${encodeURIComponent(fundName)}&limit=${ITEMS_PER_PAGE}&offset=${offset}`);
                 const data = await response.json();
 
-                if (response.ok) {
-                    if (data.length === 0) {
-                        resultsDiv.innerHTML = '<p class="error">No matching funds found. Try a different search term.</p>';
-                    } else {
-                        resultsDiv.innerHTML = `
-                            <div class="info">Found ${data.length} matching funds</div>
-                            ${data.map(fund => createFundCard(fund)).join('')}
-                        `;
-                    }
+                if (data.status === 'success') {
+                    totalItems = data.data.total_count;
+                    displayResults(data.data.funds, offset);
                 } else {
-                    resultsDiv.innerHTML = `<p class="error">Error: ${data.error || 'Failed to fetch results'}</p>`;
+                    resultsDiv.innerHTML = `<p class="error">Error: ${data.message}</p>`;
                 }
             } catch (error) {
                 resultsDiv.innerHTML = '<p class="error">Error connecting to the server. Please ensure the server is running and try again.</p>';
@@ -314,21 +366,67 @@
             resultsDiv.innerHTML = '<div class="loading">Looking up fund...<div class="loader"></div></div>';
 
             try {
-                const response = await fetch(`http://127.0.0.1:5000/nav/${serialNumber}`);
+                const response = await fetch(`http://127.0.0.1:5000/api/v1/nav/${serialNumber}`);
                 const data = await response.json();
 
-                if (response.ok) {
-                    resultsDiv.innerHTML = createFundCard({
-                        ...data,
-                        serial_number: serialNumber
-                    });
+                if (data.status === 'success') {
+                    resultsDiv.innerHTML = createFundCard(data.data);
                 } else {
-                    resultsDiv.innerHTML = `<p class="error">Error: ${data.error || 'Fund not found'}</p>`;
+                    resultsDiv.innerHTML = `<p class="error">Error: ${data.message}</p>`;
                 }
             } catch (error) {
                 resultsDiv.innerHTML = '<p class="error">Error connecting to the server. Please ensure the server is running and try again.</p>';
                 console.error('Error:', error);
             }
+        }
+
+        // Browse all funds
+        async function browseAllFunds(offset = 0) {
+            const fundHouse = document.getElementById('fund-house-filter')?.value || '';
+            lastFundHouse = fundHouse;
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.innerHTML = '<div class="loading">Loading funds...<div class="loader"></div></div>';
+
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/api/v1/nav?fund_house=${encodeURIComponent(fundHouse)}&limit=${ITEMS_PER_PAGE}&offset=${offset}`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    totalItems = data.data.total_count;
+                    displayResults(data.data.funds, offset);
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">Error: ${data.message}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = '<p class="error">Error connecting to the server. Please ensure the server is running and try again.</p>';
+                console.error('Error:', error);
+            }
+        }
+
+        // Display results with pagination
+        function displayResults(funds, offset) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (funds.length === 0) {
+                resultsDiv.innerHTML = '<p class="error">No matching funds found. Try a different search term.</p>';
+                return;
+            }
+
+            const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+            const currentPage = Math.floor(offset / ITEMS_PER_PAGE) + 1;
+
+            let html = `
+                <div class="info">Showing ${offset + 1} to ${Math.min(offset + funds.length, totalItems)} of ${totalItems} funds</div>
+                ${funds.map(fund => createFundCard(fund)).join('')}
+                <div class="pagination">
+                    <button onclick="previousPage()" ${offset === 0 ? 'disabled' : ''}>Previous</button>
+                    <span class="page-info">Page ${currentPage} of ${totalPages}</span>
+                    <button onclick="nextPage()" ${offset + ITEMS_PER_PAGE >= totalItems ? 'disabled' : ''}>Next</button>
+                </div>
+            `;
+
+            resultsDiv.innerHTML = html;
         }
 
         // Create fund card HTML
@@ -337,7 +435,7 @@
                 <div class="fund">
                     <div class="fund-house">
                         <span class="serial-number">#${fund.serial_number}</span>
-                        ${fund.fund_house}
+                        ${fund.fund_house || 'N.A.'}
                         <button class="copy-button" onclick="copySerialNumber(${fund.serial_number})">
                             Copy ID
                         </button>
@@ -345,26 +443,132 @@
                     <h3>${fund.scheme_name}</h3>
                     <div class="details">
                         <div class="detail">
-                            <strong>NAV:</strong> ₹${fund.nav.toFixed(4)}
+                            <strong>NAV:</strong> ${fund.nav === null ? 'N.A.' : `₹${fund.nav.toFixed(4)}`}
                         </div>
                         <div class="detail">
-                            <strong>Date:</strong> ${fund.date}
+                            <strong>Date:</strong> ${fund.nav_date ? new Date(fund.nav_date).toLocaleDateString() : 'N.A.'}
                         </div>
+                        <div class="detail">
+                            <strong>Category:</strong> ${fund.scheme_category || 'N.A.'}
+                        </div>
+                    </div>
+                    <div class="additional-info">
+                        <strong>Scheme Type:</strong> ${fund.scheme_type || 'N.A.'}
                     </div>
                 </div>
             `;
         }
 
-        // Copy serial number to clipboard
-        async function copySerialNumber(serialNumber) {
-            try {
-                await navigator.clipboard.writeText(serialNumber);
-                alert(`Serial number ${serialNumber} copied to clipboard!`);
-            } catch (err) {
-                console.error('Failed to copy serial number:', err);
-                alert('Failed to copy serial number to clipboard');
+        // Pagination handlers
+        function nextPage() {
+            currentOffset += ITEMS_PER_PAGE;
+            refreshCurrentView();
+        }
+
+        function previousPage() {
+            currentOffset = Math.max(0, currentOffset - ITEMS_PER_PAGE);
+            refreshCurrentView();
+        }
+
+        function refreshCurrentView() {
+            switch (currentTab) {
+                case 'search':
+                    if (lastSearchTerm) searchFund(currentOffset);
+                    break;
+                case 'browse':
+                    browseAllFunds(currentOffset);
+                    break;
             }
         }
+
+        // Copy serial number to clipboard
+        function copySerialNumber(serialNumber) {
+            navigator.clipboard.writeText(serialNumber.toString())
+                .then(() => {
+                    const button = event.target;
+                    const originalText = button.textContent;
+                    button.textContent = 'Copied!';
+                    button.style.backgroundColor = '#45a049';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.backgroundColor = '#4caf50';
+                    }, 1500);
+                })
+                .catch(err => {
+                    console.error('Failed to copy:', err);
+                    alert('Failed to copy serial number');
+                });
+        }
+
+        // Safe date formatter
+        function formatDate(dateString) {
+            if (!dateString) return 'N.A.';
+            try {
+                return new Date(dateString).toLocaleDateString();
+            } catch (e) {
+                console.error('Error formatting date:', e);
+                return 'N.A.';
+            }
+        }
+
+        // Safe number formatter
+        function formatNumber(number, decimals = 4) {
+            if (number === null || number === undefined || isNaN(number)) {
+                return 'N.A.';
+            }
+            try {
+                return Number(number).toFixed(decimals);
+            } catch (e) {
+                console.error('Error formatting number:', e);
+                return 'N.A.';
+            }
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set up any initial state or event listeners
+            const urlParams = new URLSearchParams(window.location.search);
+            const serialNumber = urlParams.get('serial');
+            
+            if (serialNumber) {
+                // If serial number is in URL, switch to direct tab and perform lookup
+                switchTab('direct');
+                document.getElementById('serial-number').value = serialNumber;
+                lookupFundBySerial();
+            }
+
+            // Add error handling for input fields
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('invalid', (e) => {
+                    e.preventDefault();
+                    input.classList.add('error-input');
+                });
+                
+                input.addEventListener('input', () => {
+                    input.classList.remove('error-input');
+                });
+            });
+        });
+
+        // Error handling for fetch requests
+        function handleFetchError(error) {
+            console.error('Fetch error:', error);
+            return {
+                status: 'error',
+                message: 'Failed to connect to server. Please try again later.'
+            };
+        }
+
+        // Add custom error handling for failed image loads
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'IMG') {
+                e.target.style.display = 'none';
+                const errorText = document.createElement('span');
+                errorText.textContent = 'Image not available';
+                errorText.className = 'error-text';
+                e.target.parentNode.appendChild(errorText);
+            }
+        }, true);
     </script>
 </body>
 </html>
