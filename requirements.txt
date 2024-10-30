@@ -1,0 +1,87 @@
+# requirements.txt
+Flask==3.0.0
+flask-cors==4.0.0
+requests==2.31.0
+gunicorn==21.2.0
+python-dotenv==1.0.0
+
+# config.py
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Config:
+    DEBUG = False
+    CORS_HEADERS = 'Content-Type'
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+    CACHE_TYPE = "SimpleCache"
+    CACHE_DEFAULT_TIMEOUT = 300
+
+class ProductionConfig(Config):
+    pass
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+
+# Modified app.py
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+import requests
+from typing import Dict, List
+from datetime import datetime
+from functools import lru_cache
+from config import ProductionConfig, DevelopmentConfig
+import os
+
+app = Flask(__name__)
+app.config.from_object(ProductionConfig if os.getenv('FLASK_ENV') == 'production' else DevelopmentConfig)
+CORS(app)
+
+# [Rest of your existing Flask code remains the same]
+
+# Add error handlers
+@app.errorhandler(404)
+def not_found_error(error):
+    return jsonify({
+        "status": "error",
+        "message": "Resource not found",
+        "timestamp": datetime.now().isoformat()
+    }), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({
+        "status": "error",
+        "message": "Internal server error",
+        "timestamp": datetime.now().isoformat()
+    }), 500
+
+# Dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+ENV FLASK_ENV=production
+ENV FLASK_APP=app.py
+
+EXPOSE 8000
+
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
+
+# .env
+FLASK_ENV=production
+FLASK_APP=app.py
+
+# .gitignore
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+ENV/
