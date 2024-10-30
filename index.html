@@ -439,37 +439,33 @@
 
         // Create fund card HTML
         function createFundCard(fund) {
-            return `
-                <div class="fund">
-                    <div class="fund-house">
-                        <span class="serial-number">#${fund.serial_number}</span>
-                        ${fund.fund_house || 'N.A.'}
-                        <button class="copy-button" onclick="copySerialNumber(${fund.serial_number})">
-                            Copy ID
-                        </button>
-                    </div>
-                    <h3>${fund.scheme_name}</h3>
-                    <div class="details">
-                        <div class="detail">
-                            <strong>NAV:</strong> ${fund.nav === null ? 'N.A.' : `₹${fund.nav.toFixed(4)}`}
-                        </div>
-                        <div class="detail">
-                            <strong>Date:</strong> ${fund.nav_date ? new Date(fund.nav_date).toLocaleDateString() : 'N.A.'}
-                        </div>
-                        <div class="detail">
-                            <strong>Category:</strong> ${fund.scheme_category || 'N.A.'}
-                        </div>
-                    </div>
-                    <div class="additional-info">
-                        <strong>Scheme Type:</strong> ${fund.scheme_type || 'N.A.'}
-                    </div>
+    return `
+        <div class="fund">
+            <div class="fund-house">
+                <span class="serial-number">#${fund.serial_number}</span>
+                ${fund.fund_house || 'N.A.'}
+                <button class="copy-button" onclick="copySerialNumber(${fund.serial_number})">
+                    Copy ID
+                </button>
+            </div>
+            <h3>${fund.scheme_name}</h3>
+            <div class="details">
+                <div class="detail">
+                    <strong>NAV:</strong> ${fund.nav === null ? 'N.A.' : `₹${fund.nav.toFixed(4)}`}
                 </div>
-
-            
-            `;
-                
-        }
-
+                <div class="detail">
+                    <strong>Date:</strong> ${fund.nav_date ? new Date(fund.nav_date).toLocaleDateString() : 'N.A.'}
+                </div>
+                <div class="detail">
+                    <strong>Category:</strong> ${fund.scheme_category || 'N.A.'}
+                </div>
+            </div>
+            <div class="additional-info">
+                <strong>Scheme Type:</strong> ${fund.scheme_type || 'N.A.'}
+            </div>
+        </div>
+    `;
+}
         // Pagination handlers
         function nextPage() {
             currentOffset += ITEMS_PER_PAGE;
@@ -569,7 +565,7 @@
                 message: 'Failed to connect to server. Please try again later.'
             };
         }
-
+        
         // Add custom error handling for failed image loads
         window.addEventListener('error', function(e) {
             if (e.target.tagName === 'IMG') {
@@ -580,6 +576,14 @@
                 e.target.parentNode.appendChild(errorText);
             }
         }, true);
+        
+        let searchTimeout;
+        function debouncedSearch() {
+         clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+        searchFund();
+        }, 300);
+}
     </script>
 </body>
 </html>
