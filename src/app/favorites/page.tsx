@@ -3,9 +3,8 @@ import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { favorites } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { FavoritesList } from '@/components/favorites-list';
 import Link from 'next/link';
 
 export default async function FavoritesPage() {
@@ -43,21 +42,7 @@ export default async function FavoritesPage() {
                             </Link>
                         </div>
                     ) : (
-                        <div className="space-y-4">
-                            <p className="text-sm text-gray-600">{userFavorites.length} saved fund{userFavorites.length !== 1 ? 's' : ''}</p>
-                            {userFavorites.map((favorite) => (
-                                <Card key={favorite.id} className="p-4">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Badge variant="outline">#{favorite.fundSerialNumber}</Badge>
-                                        <span className="text-sm text-gray-600">{favorite.fundHouse}</span>
-                                    </div>
-                                    <h3 className="font-semibold text-lg">{favorite.fundName}</h3>
-                                    <p className="text-sm text-gray-500 mt-2">
-                                        Saved on {new Date(favorite.addedAt).toLocaleDateString()}
-                                    </p>
-                                </Card>
-                            ))}
-                        </div>
+                        <FavoritesList favorites={userFavorites} />
                     )}
                 </div>
             </main>

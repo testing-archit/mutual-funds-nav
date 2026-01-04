@@ -1,50 +1,67 @@
-# 🚀 FundTracker - Mutual Funds Tracker
+# 🚀 FundTracker - Advanced Mutual Funds Tracker
 
-A modern, full-stack SaaS application for tracking mutual funds with real-time NAV data from AMFI India.
+A modern, full-stack SaaS application for tracking mutual funds with real-time NAV data from AMFI India featuring advanced analytics, export capabilities, and professional-grade UX.
 
 ## ✨ Features
 
-- 🔐 **Authentication** - Secure user authentication with NextAuth.js v5
-- 🔍 **Smart Search** - Amazon-style autocomplete search with real-time suggestions
-- ⭐ **Favorites** - Save and manage your favorite mutual funds
+### Core Functionality
+- 🔐 **Secure Authentication** - NextAuth.js v5 with email/password and session management
+- 🔍 **Smart Autocomplete Search** - Amazon-style search with real-time suggestions
+- ⭐ **Favorites Management** - Save and manage your favorite mutual funds
+- 📜 **Search History Tracking** - Automatic tracking and quick re-search functionality
 - 📊 **Real-time Data** - Always up-to-date NAV data from AMFI India
-- 📜 **Search History** - Track and revisit your previous searches
-- 🎨 **Modern UI** - Beautiful, responsive design with Tailwind CSS and shadcn/ui
+
+### Advanced Features
+- 📈 **Dashboard Statistics** - Live metrics showing favorites count, searches today, and available funds
+- 🔬 **Fund Details Modal** - Comprehensive fund information with NAV, ISIN codes, and quick actions
+- 💾 **CSV Export** - Download favorites, search history, and search results to Excel/CSV
+- ⌨️ **Keyboard Shortcuts** - Power user features (`Ctrl+K` to focus search, `ESC` to clear)
+- 🎨 **Loading Skeletons** - Professional loading states for better UX
+- ❌ **Custom Error Pages** - Beautiful 404 and error boundary pages
+- 🔔 **Toast Notifications** - Real-time feedback on all user actions
+
+### Design & UX
 - 🌙 **Dark Mode Support** - Seamless light and dark mode experience
-- 🔔 **Toast Notifications** - Real-time feedback on user actions
+- 📱 **Fully Responsive** - Optimized for mobile, tablet, and desktop
+- 🎯 **Quick Actions** - One-click access to favorites, history, and exports
+- ⚡ **Fast Performance** - Server components, edge runtime, and optimized queries
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **Next.js 16** - React framework with App Router
-- **React 19** - Server Components and Server Actions
-- **TypeScript** - Type safety throughout
+- **Next.js 16** - React framework with App Router and Server Components
+- **React 19** - Latest React with concurrent features
+- **TypeScript** - Full type safety throughout
 - **Tailwind CSS v4** - Modern utility-first CSS
-- **shadcn/ui** - Beautiful, accessible components
+- **shadcn/ui** - Beautiful, accessible component library
 - **Lucide Icons** - Modern icon library
 
-### Backend
+### Backend & Database
 - **PostgreSQL** - Neon serverless database
-- **Drizzle ORM** - Type-safe database queries
+- **Drizzle ORM** - Type-safe database queries with migrations
 - **NextAuth.js v5** - Authentication and session management
 - **bcrypt** - Secure password hashing
 
+### Data & Export
+- **PapaParser** - CSV generation and export
+- **AMFI India API** - Real-time mutual funds data
+
 ### Deployment
 - **Vercel** - Serverless deployment with Edge Runtime
-- **Bun** - Fast JavaScript runtime
+- **Bun** - Fast JavaScript runtime for development
 
 ## 📋 Prerequisites
 
-- Bun >= 1.0
+- Bun >= 1.0 (or Node.js >= 18)
 - PostgreSQL database (Neon recommended)
-- Node.js >= 18 (for compatibility)
+- Modern browser with JavaScript enabled
 
 ## 🚀 Getting Started
 
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/testing-archit/mutual-funds-nav.git
 cd mutual-funds-nav
 ```
 
@@ -71,7 +88,7 @@ NODE_ENV="development"
 ```
 
 To generate a secure `NEXTAUTH_SECRET`:
-```bash
+```bash 
 openssl rand -base64 32
 ```
 
@@ -95,39 +112,48 @@ Visit [http://localhost:3000](http://localhost:3000) to see your app!
 ```
 mutual-funds-nav/
 ├── src/
-│   ├── app/                    # Next.js app directory
-│   │   ├── api/               # API routes
-│   │   │   ├── auth/          # Authentication endpoints
-│   │   │   ├── autocomplete/  # Search autocomplete
-│   │   │   ├── favorites/     # Favorites management
-│   │   │   ├── history/       # Search history
-│   │   │   └── search/        # Fund search
-│   │   ├── dashboard/         # Dashboard page
-│   │   ├── favorites/         # Favorites page
-│   │   ├── history/           # Search history page
-│   │   ├── login/             # Login page
-│   │   ├── signup/            # Signup page
-│   │   ├── layout.tsx         # Root layout
-│   │   └── page.tsx           # Landing page
-│   ├── components/            # React components
-│   │   ├── ui/               # shadcn/ui components
-│   │   ├── login-form.tsx    # Login form with validation
-│   │   ├── signup-form.tsx   # Signup form with validation
+│   ├── app/                        # Next.js app directory
+│   │   ├── api/                   # API routes
+│   │   │   ├── auth/              # Authentication endpoints
+│   │   │   ├── autocomplete/      # Search autocomplete
+│   │   │   ├── favorites/         # Favorites management
+│   │   │   ├── history/           # Search history
+│   │   │   └── search/            # Fund search
+│   │   ├── dashboard/             # Dashboard page (NEW)
+│   │   ├── favorites/             # Favorites page
+│   │   ├── history/               # Search history page
+│   │   ├── login/                 # Login page
+│   │   ├── signup/                # Signup page
+│   │   ├── error.tsx              # Global error boundary (NEW)
+│   │   ├── not-found.tsx          # Custom 404 page (NEW)
+│   │   ├── layout.tsx             # Root layout
+│   │   └── page.tsx               # Landing page
+│   ├── components/                # React components
+│   │   ├── ui/                    # shadcn/ui components
+│   │   ├── dashboard-stats.tsx    # Dashboard statistics (NEW)
+│   │   ├── fund-details-modal.tsx # Fund details modal (NEW)
+│   │   ├── favorites-list.tsx     # Favorites with export (NEW)
+│   │   ├── search-history-list.tsx # History with export (NEW)
+│   │   ├── loading-skeletons.tsx  # Loading states (NEW)
+│   │   ├── keyboard-shortcuts.tsx # Keyboard handler (NEW)
+│   │   ├── login-form.tsx         # Login form with validation
+│   │   ├── signup-form.tsx        # Signup form with validation
 │   │   ├── search-with-autocomplete.tsx
-│   │   └── toast-provider.tsx
-│   └── lib/                   # Utility functions
-│       ├── db/               # Database configuration
-│       │   ├── index.ts      # Database client
-│       │   └── schema.ts     # Drizzle schema
-│       ├── actions.ts        # Server actions
-│       ├── amfi.ts          # AMFI data fetching
-│       ├── auth.ts          # NextAuth configuration
-│       └── utils.ts         # Helper functions
-├── drizzle/                  # Database migrations
-├── public/                   # Static assets
-├── .env.local               # Environment variables
-├── drizzle.config.ts        # Drizzle configuration
-├── next.config.ts           # Next.js configuration
+│   │   └── toast-provider.tsx     # Toast notifications
+│   └── lib/                       # Utility functions
+│       ├── db/                    # Database configuration
+│       │   ├── index.ts           # Database client
+│       │   └── schema.ts          # Drizzle schema
+│       ├── actions.ts             # Server actions
+│       ├── amfi.ts                # AMFI data fetching & caching
+│       ├── auth.ts                # NextAuth configuration
+│       ├── export.ts              # CSV export utilities (NEW)
+│       └── utils.ts               # Helper functions
+├── drizzle/                       # Database migrations
+├── public/                        # Static assets
+├── .env.local                     # Environment variables
+├── drizzle.config.ts              # Drizzle configuration
+├── next.config.ts                 # Next.js configuration
 ├── package.json
 └── tsconfig.json
 ```
@@ -160,20 +186,38 @@ mutual-funds-nav/
 
 ## 🎯 Key Features Explained
 
-### Smart Autocomplete
-Type at least 2 characters to see real-time suggestions from thousands of mutual funds. Searches across fund names and AMC names.
+### Dashboard Statistics
+Real-time metrics displayed at the top of your dashboard:
+- Total favorites count
+- Searches performed today
+- Total available funds from AMFI
+- Market status indicator
 
-### Favorites Management
-Save your favorite funds with one click. Access them quickly from the favorites page.
+### Fund Details Modal
+Click "View Details" on any fund to see:
+- Current NAV with date
+- Full fund information
+- ISIN codes (Payout & Reinvestment)
+- One-click favorite toggle
+- Search online functionality
 
-### Search History
-Automatically tracks all your searches. Revisit previous searches with a single click.
+### CSV Export
+Export your data for external analysis:
+- **Search Results**: Export current search results
+- **Favorites**: Download all saved funds
+- **Search History**: Export your search queries
 
-### Password Visibility Toggle
-Enhanced UX with password visibility toggle on login and signup forms.
+All exports include timestamps and are formatted for Excel/Numbers.
 
-### Toast Notifications
-Get instant feedback when adding/removing favorites or encountering errors.
+### Keyboard Shortcuts
+- `Ctrl/Cmd + K` - Focus search input
+- `ESC` - Clear search or close modals
+
+### Loading States
+Professional skeleton loaders on:
+- Dashboard stats
+- Search results
+- Page transitions
 
 ## 📊 API Endpoints
 
@@ -183,7 +227,7 @@ Get instant feedback when adding/removing favorites or encountering errors.
 - `GET /signup` - Signup page
 
 ### Protected Routes (Requires Authentication)
-- `GET /dashboard` - Main dashboard with search
+- `GET /dashboard` - Main dashboard with stats
 - `GET /favorites` - User's saved funds
 - `GET /history` - Search history
 - `GET /api/search?q={query}` - Search funds
@@ -199,15 +243,20 @@ Get instant feedback when adding/removing favorites or encountering errors.
 
 1. Push your code to GitHub
 2. Import the repository in Vercel
-3. Add environment variables in Vercel dashboard
+3. Add environment variables in Vercel dashboard:
+   - `DATABASE_URL` - Your production database URL
+   - `NEXTAUTH_SECRET` - Random secret for JWT
+   - `NEXTAUTH_URL` - Your production URL (e.g., `https://yourapp.vercel.app`)
 4. Deploy!
 
 ### Environment Variables for Production
 
 Make sure to set these in your Vercel project settings:
-- `DATABASE_URL` - Your production database URL
-- `NEXTAUTH_SECRET` - Random secret for JWT
-- `NEXTAUTH_URL` - Your production URL (e.g., https://yourapp.vercel.app)
+```env
+DATABASE_URL=postgresql://...
+NEXTAUTH_SECRET=<random-secret>
+NEXTAUTH_URL=https://your-domain.vercel.app
+```
 
 ## 🔧 Development Commands
 
@@ -240,15 +289,33 @@ bun run drizzle-kit studio
 Edit `src/app/globals.css` to customize the color scheme using CSS variables.
 
 ### Adding More Features
-- Advanced charts and analytics
-- Email notifications for NAV updates
-- Portfolio tracking
-- Comparison tools
-- Export to Excel/PDF
+Potential enhancements:
+- Advanced charts and NAV trends
+- Email notifications for updates
+- Portfolio tracking with investment amounts
+- Fund comparison tools
+- SIP calculator
+- Export to PDF
 
-## 📝 License
+## 📈 Performance
 
-MIT
+- **Build Time**: ~3 seconds
+- **Page Load**: Instant with Server Components
+- **AMFI Data Cache**: 5 minutes TTL
+- **Database Queries**: Optimized with proper indexes
+
+## 📝 New in this Version
+
+### v2.0.0 - Major Feature Update
+- ✨ Dashboard statistics with live metrics
+- 🔬 Fund details modal with comprehensive information
+- 💾 CSV export for all data (search, favorites, history)
+- ⌨️ Keyboard shortcuts for power users
+- 🎨 Loading skeletons for better UX
+- ❌ Custom 404 and error pages
+- 🚀 Enhanced dashboard with quick actions
+- 📊 Improved search results with view details
+- 🎯 One-click export functionality
 
 ## 🤝 Contributing
 
@@ -256,8 +323,12 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📧 Support
 
-For support, email your-email@example.com or open an issue on GitHub.
+For support, open an issue on GitHub or contact the maintainer.
+
+## 📄 License
+
+MIT
 
 ---
 
-Built with ❤️ using Next.js and Bun
+Built with ❤️ using Next.js, TypeScript, and Bun

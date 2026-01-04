@@ -6,10 +6,15 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/toast-provider';
+import { FundDetailsModal } from '@/components/fund-details-modal';
+import { exportSearchResults } from '@/lib/export';
 import type { Fund } from '@/lib/amfi';
+import { Download, Eye } from 'lucide-react';
 
 export default function SearchWithAutocomplete() {
     const { showToast } = useToast();
+    const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [query, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -162,7 +167,20 @@ export default function SearchWithAutocomplete() {
 
             {!loading && results.length > 0 && (
                 <div className="space-y-4">
-                    <p className="text-sm text-gray-600">Found {results.length} funds</p>
+                    <div className="flex justify-between items-center">
+                        <p className="text-sm text-gray-600">Found {results.length} funds</p>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                exportSearchResults(results);
+                                showToast('Results exported to CSV', 'success');
+                            }}
+                        >
+                            <Download className="mr-2 h-4 w-4" />
+                            Export Results
+                        </Button>
+                    </div>
                     {results.map((fund) => (
                         <Card key={fund.serial_number} className="p-4">
                             <div className="flex justify-between items-start mb-3">
@@ -173,13 +191,26 @@ export default function SearchWithAutocomplete() {
                                     </div>
                                     <h3 className="font-semibold text-lg">{fund.scheme_name}</h3>
                                 </div>
-                                <Button
-                                    size="sm"
-                                    variant={favorites.has(fund.serial_number) ? 'default' : 'outline'}
-                                    onClick={() => toggleFavorite(fund)}
-                                >
-                                    {favorites.has(fund.serial_number) ? '⭐ Saved' : '☆ Save'}
-                                </Button>
+                                <div className="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                            setSelectedFund(fund);
+                                            setShowDetailsModal(true);
+                                        }}
+                                    >
+                                        <Eye className="mr-2 h-4 w-4" />
+                                        Details
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant={favorites.has(fund.serial_number) ? 'default' : 'outline'}
+                                        onClick={() => toggleFavorite(fund)}
+                                    >
+                                        {favorites.has(fund.serial_number) ? '⭐ Saved' : '☆ Save'}
+                                    </Button>
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -212,6 +243,19 @@ export default function SearchWithAutocomplete() {
                     No funds found. Try a different search term.
                 </div>
             )}
+
+            {/* Fund Details Modal */}
+            <FundDetailsModal
+                fund={selectedFund}
+                isOpen={showDetailsModal}
+                onClose={() => setShowDetailsModal(false)}
+                isFavorite={selectedFund ? favorites.has(selectedFund.serial_number) : false}
+                onToggleFavorite={() => {
+                    if (selectedFund) {
+                        toggleFavorite(selectedFund);
+                    }
+                }}
+            />
         </div>
     );
 }
