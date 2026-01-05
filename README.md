@@ -39,7 +39,7 @@ A modern, full-stack SaaS application for tracking mutual funds with real-time N
 ### Backend & Database
 - **PostgreSQL** - Neon serverless database
 - **Drizzle ORM** - Type-safe database queries with migrations
-- **NextAuth.js v5** - Authentication and session management
+- **NextAuth.js v5** - Authentication and session management with proxy pattern
 - **bcrypt** - Secure password hashing
 
 ### Data & Export
@@ -88,7 +88,7 @@ NODE_ENV="development"
 ```
 
 To generate a secure `NEXTAUTH_SECRET`:
-```bash 
+```bash
 openssl rand -base64 32
 ```
 
@@ -119,36 +119,37 @@ mutual-funds-nav/
 │   │   │   ├── favorites/         # Favorites management
 │   │   │   ├── history/           # Search history
 │   │   │   └── search/            # Fund search
-│   │   ├── dashboard/             # Dashboard page (NEW)
+│   │   ├── dashboard/             # Dashboard page
 │   │   ├── favorites/             # Favorites page
 │   │   ├── history/               # Search history page
 │   │   ├── login/                 # Login page
 │   │   ├── signup/                # Signup page
-│   │   ├── error.tsx              # Global error boundary (NEW)
-│   │   ├── not-found.tsx          # Custom 404 page (NEW)
+│   │   ├── error.tsx              # Global error boundary
+│   │   ├── not-found.tsx          # Custom 404 page
 │   │   ├── layout.tsx             # Root layout
 │   │   └── page.tsx               # Landing page
 │   ├── components/                # React components
 │   │   ├── ui/                    # shadcn/ui components
-│   │   ├── dashboard-stats.tsx    # Dashboard statistics (NEW)
-│   │   ├── fund-details-modal.tsx # Fund details modal (NEW)
-│   │   ├── favorites-list.tsx     # Favorites with export (NEW)
-│   │   ├── search-history-list.tsx # History with export (NEW)
-│   │   ├── loading-skeletons.tsx  # Loading states (NEW)
-│   │   ├── keyboard-shortcuts.tsx # Keyboard handler (NEW)
+│   │   ├── dashboard-stats.tsx    # Dashboard statistics
+│   │   ├── fund-details-modal.tsx # Fund details modal
+│   │   ├── favorites-list.tsx     # Favorites with export
+│   │   ├── search-history-list.tsx # History with export
+│   │   ├── loading-skeletons.tsx  # Loading states
+│   │   ├── keyboard-shortcuts.tsx # Keyboard handler
 │   │   ├── login-form.tsx         # Login form with validation
 │   │   ├── signup-form.tsx        # Signup form with validation
 │   │   ├── search-with-autocomplete.tsx
 │   │   └── toast-provider.tsx     # Toast notifications
-│   └── lib/                       # Utility functions
-│       ├── db/                    # Database configuration
-│       │   ├── index.ts           # Database client
-│       │   └── schema.ts          # Drizzle schema
-│       ├── actions.ts             # Server actions
-│       ├── amfi.ts                # AMFI data fetching & caching
-│       ├── auth.ts                # NextAuth configuration
-│       ├── export.ts              # CSV export utilities (NEW)
-│       └── utils.ts               # Helper functions
+│   ├── lib/                       # Utility functions
+│   │   ├── db/                    # Database configuration
+│   │   │   ├── index.ts           # Database client
+│   │   │   └── schema.ts          # Drizzle schema
+│   │   ├── actions.ts             # Server actions
+│   │   ├── amfi.ts                # AMFI data fetching & caching
+│   │   ├── auth.ts                # NextAuth configuration
+│   │   ├── export.ts              # CSV export utilities
+│   │   └── utils.ts               # Helper functions
+│   └── proxy.ts                   # Next.js 16 proxy (auth middleware)
 ├── drizzle/                       # Database migrations
 ├── public/                        # Static assets
 ├── .env.local                     # Environment variables
@@ -199,6 +200,7 @@ Click "View Details" on any fund to see:
 - Full fund information
 - ISIN codes (Payout & Reinvestment)
 - One-click favorite toggle
+- Copy scheme code to clipboard
 - Search online functionality
 
 ### CSV Export
@@ -299,12 +301,18 @@ Potential enhancements:
 
 ## 📈 Performance
 
-- **Build Time**: ~3 seconds
+- **Build Time**: ~3-4 seconds
 - **Page Load**: Instant with Server Components
 - **AMFI Data Cache**: 5 minutes TTL
 - **Database Queries**: Optimized with proper indexes
+- **Production Build**: Passes with no errors
 
-## 📝 New in this Version
+## 📝 Version History
+
+### v2.0.1 - Proxy Migration (Latest)
+- 🔄 Migrated from `middleware.ts` to `proxy.ts` for Next.js 16 compatibility
+- ✅ Resolved deprecation warnings
+- 🎯 No functional changes, all features remain the same
 
 ### v2.0.0 - Major Feature Update
 - ✨ Dashboard statistics with live metrics
@@ -323,7 +331,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📧 Support
 
-For support, open an issue on GitHub or contact the maintainer.
+For support, open an issue on [GitHub](https://github.com/testing-archit/mutual-funds-nav/issues).
 
 ## 📄 License
 
@@ -331,4 +339,6 @@ MIT
 
 ---
 
-Built with ❤️ using Next.js, TypeScript, and Bun
+**Built with ❤️ using Next.js 16, TypeScript, and Bun**
+
+**Production Ready** ✅ | **Build Status** ✅ Passing | **TypeScript** ✅ No Errors
