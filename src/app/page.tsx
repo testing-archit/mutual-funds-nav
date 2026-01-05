@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -27,43 +28,81 @@ export default async function Home() {
         </nav>
 
         {/* Hero Section */}
-        <div className="text-center max-w-4xl mx-auto mb-20">
-          <h2 className="text-5xl md:text-7xl font-bold text-white mb-6">
-            Track Your
-            <span className="bg-gradient-to-r from-purple-400 to-pink-600 text-transparent bg-clip-text"> Mutual Funds</span>
-          </h2>
-          <p className="text-xl text-gray-300 mb-8">
-            Real-time NAV data from AMFI India. Search, save, and manage your favorite mutual funds with intelligent autocomplete.
-          </p>
-          <Link href="/signup">
-            <Button size="lg" className="text-lg px-8 py-6">
-              Start Tracking Free →
-            </Button>
-          </Link>
+        <div className="text-center max-w-6xl mx-auto mb-20">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="text-left">
+              <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
+                Track Your
+                <span className="bg-gradient-to-r from-purple-400 to-pink-600 text-transparent bg-clip-text"> Mutual Funds</span>
+              </h2>
+              <p className="text-xl text-gray-300 mb-8">
+                Real-time NAV data from AMFI India. Search, save, and manage your favorite mutual funds with intelligent autocomplete.
+              </p>
+              <Link href="/signup">
+                <Button size="lg" className="text-lg px-8 py-6">
+                  Start Tracking Free →
+                </Button>
+              </Link>
+            </div>
+            <div className="relative">
+              <Image
+                src="/hero-illustration.png"
+                alt="Financial tracking illustration"
+                width={500}
+                height={500}
+                className="w-full h-auto rounded-lg"
+                priority
+              />
+            </div>
+          </div>
         </div>
 
         {/* Features */}
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <div className="text-4xl mb-4">🔍</div>
-            <h3 className="text-2xl font-bold text-white mb-4">Smart Search</h3>
-            <p className="text-gray-300">
+            <div className="mb-6 flex justify-center">
+              <Image
+                src="/icon-search.png"
+                alt="Smart search icon"
+                width={80}
+                height={80}
+                className="w-20 h-20"
+              />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-4 text-center">Smart Search</h3>
+            <p className="text-gray-300 text-center">
               Amazon-style autocomplete suggestions as you type. Find any fund instantly from thousands of options.
             </p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <div className="text-4xl mb-4">⭐</div>
-            <h3 className="text-2xl font-bold text-white mb-4">Save Favorites</h3>
-            <p className="text-gray-300">
+            <div className="mb-6 flex justify-center">
+              <Image
+                src="/icon-favorites.png"
+                alt="Favorites icon"
+                width={80}
+                height={80}
+                className="w-20 h-20"
+              />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-4 text-center">Save Favorites</h3>
+            <p className="text-gray-300 text-center">
               Bookmark your favorite funds for quick access. Track NAV changes and stay updated.
             </p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <div className="text-4xl mb-4">📊</div>
-            <h3 className="text-2xl font-bold text-white mb-4">Real-time Data</h3>
-            <p className="text-gray-300">
+            <div className="mb-6 flex justify-center">
+              <Image
+                src="/icon-realtime.png"
+                alt="Real-time data icon"
+                width={80}
+                height={80}
+                className="w-20 h-20"
+              />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-4 text-center">Real-time Data</h3>
+            <p className="text-gray-300 text-center">
               Always up-to-date NAV data directly from AMFI India. No delays, no approximations.
             </p>
           </div>

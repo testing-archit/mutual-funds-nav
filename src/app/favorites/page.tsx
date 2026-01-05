@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { Button } from '@/components/ui/button';
 import { FavoritesList } from '@/components/favorites-list';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default async function FavoritesPage() {
     const session = await auth();
@@ -36,6 +37,15 @@ export default async function FavoritesPage() {
                 <div className="max-w-4xl mx-auto">
                     {userFavorites.length === 0 ? (
                         <div className="text-center py-12">
+                            <div className="mb-6 flex justify-center">
+                                <Image
+                                    src="/empty-favorites.png"
+                                    alt="No favorites yet"
+                                    width={200}
+                                    height={200}
+                                    className="w-48 h-48 opacity-80"
+                                />
+                            </div>
                             <p className="text-gray-600 mb-4">You haven't saved any favorites yet.</p>
                             <Link href="/dashboard">
                                 <Button>Start Searching</Button>
